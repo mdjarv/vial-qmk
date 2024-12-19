@@ -19,3 +19,7 @@
 #ifdef OLED_ENABLE
 #   define OLED_FONT_H "keyboards/splitkb/aurora/sofle_v2/glcdfont.c"
 #endif
+
+#ifndef SPLIT_LAYER_STATE_ENABLE
+#    define SPLIT_LAYER_STATE_ENABLE
+#endif
