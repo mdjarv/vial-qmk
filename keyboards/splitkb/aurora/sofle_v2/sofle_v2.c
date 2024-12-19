@@ -21,21 +21,9 @@
 #include "quantum.h"
 
 // Animations
-#include "gfx_idle.h"
+#include "gfx_idle_small.h"
 #include "gfx_headphones.h"
-
-#define FRAME_DURATION 500
-uint32_t timer         = 0;
-uint8_t  current_frame = 0;
-
-uint32_t frame_duration(void) {
-    uint32_t reduction = get_current_wpm() * 20;
-    if (reduction > 400) {
-        reduction = 400;
-    }
-    // start at FRAME_DURATION and reduce based on get_current_wpm()
-    return FRAME_DURATION - reduction;
-}
+#include "gfx_amazed.h"
 
 // The first four layers gets a name for readability, which is then used in the OLED below.
 enum layers { _DEFAULT, _GAME, _LOWER, _RAISE, _ADJUST };
@@ -185,13 +173,7 @@ void render_mod_status_ctrl_shift(uint8_t modifiers) {
 }
 
 void render_logo(void) {
-    if (timer_elapsed(timer) > frame_duration()) {
-        timer         = timer_read();
-        current_frame = (current_frame + 1) % 4;
-
-        oled_write_raw_P(gfx_idle_frames[current_frame], gfx_idle_sizes[current_frame]);
-    }
-
+	render_animation(&gfx_idle_small_animation);
     oled_set_cursor(0, 4);
 }
 
@@ -232,11 +214,12 @@ void render_layer_state(void) {
 }
 
 void render_slave(void) {
-    if (timer_elapsed(timer) > frame_duration()) {
-        timer         = timer_read();
-        current_frame = (current_frame + 1) % 4;
-
-        oled_write_raw_P(gfx_headphones_frames[current_frame], gfx_headphones_sizes[current_frame]);
+    switch (get_highest_layer(layer_state | default_layer_state)) {
+        case _GAME:
+			render_animation(&gfx_amazed_animation);
+            break;
+        default:
+			render_animation(&gfx_headphones_animation);
     }
 }
 
