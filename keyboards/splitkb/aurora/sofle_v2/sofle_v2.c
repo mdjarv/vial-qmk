@@ -227,6 +227,27 @@ bool oled_task_kb(void) {
     if (!oled_task_user()) {
         return false;
     }
+
+	// Handle screen timeout manually due to animations
+	if (!is_oled_on()) {
+		// OLED off, check if activity
+		if (last_input_activity_elapsed() < OLED_TIMEOUT) {
+			// Recent activity, turn oled on
+			oled_on();
+		} else {
+			// No recent activity, keep oled off
+			return false;
+		}
+	}
+
+	if (last_input_activity_elapsed() > OLED_TIMEOUT) {
+		// Input activity timeout, turn off OLEDs
+		oled_off();
+		return false;
+	}
+
+	// Render displays
+
     if (is_keyboard_master()) {
         // Renders the current keyboard state (layers and mods)
         render_logo();
