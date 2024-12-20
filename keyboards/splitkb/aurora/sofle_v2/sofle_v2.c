@@ -223,44 +223,51 @@ void render_slave(void) {
     }
 }
 
+bool oled_screensaver(void) {
+    if (!is_keyboard_master()) {
+		// Only handled on master
+		return false;
+    }
+
+	// Handle screen timeout manually due to animations
+	if (!is_oled_on() && last_input_activity_elapsed() < OLED_TIMEOUT) {
+		// Recent activity, turn oled on
+		oled_on();
+	} else if (last_input_activity_elapsed() > OLED_TIMEOUT) {
+		// Input activity timeout, turn off OLEDs
+		oled_off();
+	}
+
+	return !is_oled_on();
+}
+
 bool oled_task_kb(void) {
     if (!oled_task_user()) {
         return false;
     }
 
-	// Handle screen timeout manually due to animations
-	if (!is_oled_on()) {
-		// OLED off, check if activity
-		if (last_input_activity_elapsed() < OLED_TIMEOUT) {
-			// Recent activity, turn oled on
-			oled_on();
-		} else {
-			// No recent activity, keep oled off
-			return false;
-		}
-	}
-
-	if (last_input_activity_elapsed() > OLED_TIMEOUT) {
-		// Input activity timeout, turn off OLEDs
-		oled_off();
+	if (oled_screensaver()) {
+		// Screensaver is active, return early
 		return false;
 	}
-
+	
 	// Render displays
-
-    if (is_keyboard_master()) {
-        // Renders the current keyboard state (layers and mods)
-        render_logo();
-        render_logo_text();
-        render_space();
-        render_layer_state();
-        render_space();
-        render_mod_status_gui_alt(get_mods() | get_oneshot_mods());
-        render_mod_status_ctrl_shift(get_mods() | get_oneshot_mods());
-        render_kb_LED_state();
-    } else {
+    if (!is_keyboard_master()) {
         render_slave();
+		return false;
     }
+
+
+	// Renders the current keyboard state (layers and mods)
+	render_logo();
+	render_logo_text();
+	render_space();
+	render_layer_state();
+	render_space();
+	render_mod_status_gui_alt(get_mods() | get_oneshot_mods());
+	render_mod_status_ctrl_shift(get_mods() | get_oneshot_mods());
+	render_kb_LED_state();
+
     return false;
 }
 #endif
